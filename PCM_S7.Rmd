@@ -1,0 +1,236 @@
+---
+title: "PCM_S7"
+author: "Marcial Escudero"
+date: "2024-01-15"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+RECONSTRUCCION DE ESTADOS ANCESTRALES EN CARACTERES CONTINUOS
+
+Cómo ya sabras a estas alturas uno de los modelos más populares para modelizar la evolución de un caracter continuo y luego reconstruir los estados de caracter ancestral en una filogenia es el modelo browniano.
+Para estimar estados ancestrales mediante un modelo browniano lo que haremos es indentificar el conjunto de estados de caracter que tienen la mayor probabilidad bajo el nuestro modelo (Felsenstein, 2004). Este conjunto de estados de caracter ancestral serán nuestras MLE (maximum likelihood estimates o estimas de maxima verosimilitud).
+Esto lo podemos hacer con una gran variedad de funciones de paquetes de R como son la función ace de ape o la función fastAnc de phytools. 
+Para esto vamos a usar datos del tamaño corporal de un grupo de anguilas (Collar et al., 2014).
+Carguemos pues los datos.
+
+```{r}
+## load libraries
+library(phytools)
+## read tree from file
+eel.tree<-read.tree("elopomorph.tre")
+print(eel.tree,printlen=2)
+
+eel.data<-read.csv("elopomorph.csv",row.names=1,stringsAsFactors=TRUE)
+head(eel.data)
+
+## extract total body length and log-transform
+lnTL<-setNames(log(eel.data$Max_TL_cm),rownames(eel.data))
+head(lnTL)
+
+```
+
+Recuerda que cuando usa maximum likelihood lo que hacemos es elegir los valores (estados de caracter) para los nodos de la filogenia que maximizan la probabilidad de obtener los datos observados en los terminales de la filogenia.
+La función fastAnc además de calcular el valor de caracter para el maximum likelihood también computa la varianza y un intervalo de confianza de 95% para cada nodo.
+Esto último es importante porque los estados de caracter ancestal normalmente se estiman un alto grado de incertidumbre (Losos 1999).
+
+```{r}
+## estimate ancestral states using fastAnc
+fit.lnTL<-fastAnc(eel.tree,lnTL,vars=TRUE,CI=TRUE)
+print(fit.lnTL,printlen=10)
+```
+
+Vamos la filogenia.
+
+```{r}
+## plot eel phylogeny using plotTree
+plotTree(eel.tree,ftype="i",fsize=0.5,lwd=1)
+## add node labels for reference
+labelnodes(1:eel.tree$Nnode+Ntip(eel.tree),1:eel.tree$Nnode+Ntip(eel.tree),interactive=FALSE,cex=0.5)
+```
+
+Finalmente representemos la reconstrucción en nuestra filogenia con la contMap de phytools.
+
+```{r}
+## compute "contMap" object
+eel.contMap<-contMap(eel.tree,lnTL,plot=FALSE,lims=c(2.7,5.8))
+## change the color gradient to a custom gradient
+eel.contMap<-setMap(eel.contMap,c("white","orange","black"))
+## plot "contMap" object
+plot(eel.contMap,sig=2,fsize=c(0.4,0.7),lwd=c(2,3),leg.txt="log(total length cm)")
+```
+
+También podemos plotear los intervalos de confianza.
+
+```{r}
+## add error bars
+errorbar.contMap(eel.contMap,lwd=8)
+```
+
+
+RECONSTRUCCION DE ESTADOS ANCESTRALES EN CARACTERES DISCRETOS MEDIANTE PROBALIDAD MARGINAL
+
+Antes de hacer una reconstrucción de estados de caracater ancestral tendremos que elegir primero el modelo con el que vamos a modelizar la evolución de dichos caracter.
+
+Trabajaremos de nuevo con anguilas. Cargamos los datos.
+```{r}
+## extract feeding mode as a vector
+feed.mode<-setNames(eel.data[,1],rownames(eel.data))
+## set colors for plotting
+cols<-setNames(c("red","lightblue"),levels(feed.mode))
+## plot the tree & data
+plotTree.datamatrix(eel.tree,as.data.frame(feed.mode),colors=list(cols),header=FALSE,fsize=0.45)
+## add legend
+legend("topright",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n",cex=0.8)
+```
+
+Vamos a comparar cuatro modelos diferentes: ER, ARD e irreversibles
+
+```{r}
+## fit ER model
+fitER<-fitMk(eel.tree,feed.mode,model="ER")
+## fit ARD model
+fitARD<-fitMk(eel.tree,feed.mode,model="ARD")
+## fit bite->suction model
+fit01<-fitMk(eel.tree,feed.mode,model=matrix(c(0,1,0,0),2,2,byrow=TRUE))
+## fit suction->bite model
+fit10<-fitMk(eel.tree,feed.mode,model=matrix(c(0,0,1,0),2,2,byrow=TRUE))
+## extract AIC values for each model
+aic<-c(AIC(fitER),AIC(fitARD),AIC(fit01),AIC(fit10))
+## print summary table
+data.frame(model=c("ER","ARD","bite->suction","suction->bite"),logL=c(logLik(fitER),logLik(fitARD),logLik(fit01),logLik(fit10)),AIC=aic,delta.AIC=aic-min(aic))
+
+```
+
+El modelo con el mejor ajuste es ER.
+
+Uno de los métodos más usados para estimar los estados de caracter ancestral en un rasgo discreto es la probabilidad marginal. En este método cálculamos la probabilidad de los posibles estados de caracter nodo a nodo. En cada nodo nos preguntamos que estado tiene el maximum likelihood integrando a traves de todos los posibles combinaciones de estado de caracter en los otros nodos de la filogenia (Pagel 1999; UYang, 2006).
+En este método computamos las probabilidades de cada posible estado de caracter en cada nodo. La ratio o relación de las probabilidades de la suma de las probabilidades de cada estado de caracter nos da un valor entre 0 y 1 para cada estado que es llamado probabilidad margional escalada.
+
+Vamos a hacer una reconstrucción usando la función corHMM de corHM. 
+
+```{r}
+library(corHMM)
+## create new data frame for corHMM
+eel.data<-data.frame(Genus_sp=names(feed.mode),feed.mode=as.numeric(feed.mode)-1)
+head(eel.data,n=10)
+## estimate marginal ancestral states under a ER model
+fit.marginal<-corHMM(eel.tree,eel.data,node.states="marginal",rate.cat=1,rate.mat=matrix(c(NA,1,1,NA),2,2))
+fit.marginal
+```
+
+Podemos echar un vistazo a la matriz de probabilidades marginales.
+
+```{r}
+head(fit.marginal$states)
+```
+
+Echemos un vistazo a la reconstrucción en la filogenia.
+
+```{r}
+## plot the tree & data
+plotTree.datamatrix(eel.tree,as.data.frame(feed.mode),colors=list(cols),header=FALSE,fsize=0.45)
+## add legend
+legend("topright",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n",cex=0.8)
+## add node labels showing marginal ancestral states
+nodelabels(pie=fit.marginal$states,piecol=cols,cex=0.5)
+```
+
+Podemos apreciar un alto grado de incertidumbre en la reconstrucción.
+
+
+MAPEO ESTOCÁSTICO
+
+Una alternativa cada vez más popular al calculo de las probabilidades marginales es el mapeo estocático. En este caso se usa MCMC para muestrear historias evolutivas de nuestro caracter de interés a partir de su probabilidad a posteriori (Huelsenbeck et al., 2033).
+Usamos un modelos evolutivo de tipo Mk como con el cálculo de las probablidades margionales pero en este caso muestreamos historias evolutivas en el árbol para nuestro caracter de interés. Y calculamos la probabilidad a posteriori de nuestro caracter en los nodos en función de frecuciencia que muestra de uno un otro estado de caracter en las multiples mapeos.
+
+Empecemos generando un único mapeo con nuestro dataset de las anguilas.
+```{r}
+## generate one stochastic character history
+mtree<-make.simmap(eel.tree,feed.mode,model="ER")
+
+## plot single stochastic map
+plot(mtree,cols,fsize=0.4,ftype="i",lwd=2,offset=0.4,ylim=c(-1,Ntip(eel.tree)))
+## add legend
+legend("bottomleft",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n",cex=0.8)
+
+```
+
+Pero para poder sacar información vamos a hacer por ejemplo 1000 mapeos en vez de 1.
+Y vez de hacer el mapeo a partir del maximum likelihood del modelo ER (como hemos hecho antes) vamos a hacer los mapeos a partir del 95% del intervalo de confianza mediante el método Bayesiano MCMC para muestrear q (tasa de transición de ER) a partir de su distribución a posteriori de porobabilidades.
+
+```{r}
+## generate 1,000 stochastic character maps in which
+## the transition rate is sampled from its posterior
+## distribution
+mtrees<-make.simmap(eel.tree,feed.mode,model="ER",nsim=1000,Q="mcmc",vQ=0.01,prior=list(use.empirical=TRUE),samplefreq=10)
+mtrees
+
+```
+
+Podemos incluso visualizar esa probabilidad a posteriori de q en el modelo ER.
+
+```{r}
+## set plot margins
+par(mar=c(5.1,4.1,2.1,2.1))
+## create a plot of the posterior density from stochastic
+## mapping
+plot(d<-density(sapply(mtrees,function(x) x$Q[1,2]),bw=0.005),bty="n",main="",xlab="q",xlim=c(0,0.5),ylab="Posterior density from MCMC",las=1,cex.axis=0.8)
+polygon(d,col=make.transparent("blue",0.25))
+## add line indicating ML solution for the same parameter
+abline(v=fit.marginal$solution[1,2])
+text(x=fit.marginal$solution[1,2],y=max(d$y),"MLE(q)",pos=4)
+
+```
+
+Visualizar directamente nuestros mapeos estocásticos puede no ser muy informativo. 
+
+```{r}
+## create a 10 x 10 grid of plot cells
+par(mfrow=c(10,10))
+## graph 100 stochastic map trees, sampled evenly from
+## our set of 1,000
+null<-sapply(mtrees[seq(10,1000,by=10)],plot,colors=cols,lwd=1,ftype="off")
+
+```
+
+Pero lo más intersante aquí es ver un resumen de los mapeos estocásticos. Esto lo podemos hacer con una función de phytools.
+
+```{r}
+## compute posterior probabilities at nodes
+pd<-summary(mtrees)
+pd
+
+## create a plot showing PP at all nodes of the tree
+plot(pd,colors=cols,fsize=0.4,ftype="i",lwd=2,offset=0.4,ylim=c(-1,Ntip(eel.tree)),cex=c(0.5,0.3))
+## add a legend
+legend("bottomleft",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n",cex=0.8)
+
+```
+
+Podemos ver que el resultado final, al menos en este caso, es muy parecido al cálculo de las probabilidades marginales.
+
+```{r}
+## set margins
+par(mar=c(5.1,4.1,2.1,2.1))
+## graph marginal ancestral states and posterior
+## probabilities from stochastic mapping
+plot(fit.marginal$states[,1],pd$ace[1:eel.tree$Nnode],pch=21,cex=1.2,bg="grey",xlab="Marginal scaled likelihoods",ylab="Posterior probabilities",bty="n",las=1,cex.axis=0.8)
+lines(c(0,1),c(0,1),col="blue",lwd=2)
+```
+
+Finalmente phytools nos otra posibilidad para visualizar los resultados.
+
+```{r}
+## create a "densityMap" object
+eel.densityMap<-densityMap(mtrees,states=levels(feed.mode)[2:1],plot=FALSE)
+
+## update color gradient
+eel.densityMap<-setMap(eel.densityMap,cols[2:1])
+## plot it, adjusting the plotting parameters
+plot(eel.densityMap,fsize=c(0.3,0.7),lwd=c(3,4))
+
+```
+
