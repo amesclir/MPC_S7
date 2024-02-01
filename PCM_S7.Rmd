@@ -34,7 +34,7 @@ head(lnTL)
 
 Recuerda que cuando usa maximum likelihood lo que hacemos es elegir los valores (estados de caracter) para los nodos de la filogenia que maximizan la probabilidad de obtener los datos observados en los terminales de la filogenia.
 La función fastAnc además de calcular el valor de caracter para el maximum likelihood también computa la varianza y un intervalo de confianza de 95% para cada nodo.
-Esto último es importante porque los estados de caracter ancestal normalmente se estiman un alto grado de incertidumbre (Losos 1999).
+Esto último es importante porque los estados de caracter ancestal normalmente se estiman con un alto grado de incertidumbre (Losos 1999).
 
 ```{r}
 ## estimate ancestral states using fastAnc
@@ -67,6 +67,7 @@ También podemos plotear los intervalos de confianza.
 ```{r}
 ## add error bars
 errorbar.contMap(eel.contMap,lwd=8)
+
 ```
 
 
@@ -86,7 +87,7 @@ plotTree.datamatrix(eel.tree,as.data.frame(feed.mode),colors=list(cols),header=F
 legend("topright",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n",cex=0.8)
 ```
 
-Vamos a comparar cuatro modelos diferentes: ER, ARD e irreversibles
+Vamos a comparar cuatro modelos diferentes: ER, ARD y dos irreversibles
 
 ```{r}
 ## fit ER model
@@ -106,10 +107,10 @@ data.frame(model=c("ER","ARD","bite->suction","suction->bite"),logL=c(logLik(fit
 
 El modelo con el mejor ajuste es ER.
 
-Uno de los métodos más usados para estimar los estados de caracter ancestral en un rasgo discreto es la probabilidad marginal. En este método cálculamos la probabilidad de los posibles estados de caracter nodo a nodo. En cada nodo nos preguntamos que estado tiene el maximum likelihood integrando a traves de todos los posibles combinaciones de estado de caracter en los otros nodos de la filogenia (Pagel 1999; UYang, 2006).
+Uno de los métodos más usados para estimar los estados de caracter ancestral en un rasgo discreto es la probabilidad marginal. En este método cálculamos la probabilidad de los posibles estados de caracter nodo a nodo. En cada nodo nos preguntamos que estado tiene el maximum likelihood integrando a traves de todos los posibles combinaciones de estado de caracter en los otros nodos de la filogenia (Yang, 2006).
 En este método computamos las probabilidades de cada posible estado de caracter en cada nodo. La ratio o relación de las probabilidades de la suma de las probabilidades de cada estado de caracter nos da un valor entre 0 y 1 para cada estado que es llamado probabilidad margional escalada.
 
-Vamos a hacer una reconstrucción usando la función corHMM de corHM. 
+Vamos a hacer una reconstrucción usando la función corHMM de corHMM. 
 
 ```{r}
 library(corHMM)
@@ -143,8 +144,8 @@ Podemos apreciar un alto grado de incertidumbre en la reconstrucción.
 
 MAPEO ESTOCÁSTICO
 
-Una alternativa cada vez más popular al calculo de las probabilidades marginales es el mapeo estocático. En este caso se usa MCMC para muestrear historias evolutivas de nuestro caracter de interés a partir de su probabilidad a posteriori (Huelsenbeck et al., 2033).
-Usamos un modelos evolutivo de tipo Mk como con el cálculo de las probablidades margionales pero en este caso muestreamos historias evolutivas en el árbol para nuestro caracter de interés. Y calculamos la probabilidad a posteriori de nuestro caracter en los nodos en función de frecuciencia que muestra de uno un otro estado de caracter en las multiples mapeos.
+Una alternativa cada vez más popular al calculo de las probabilidades marginales es el mapeo estocático. En este caso se usa MCMC para muestrear historias evolutivas de nuestro caracter de interés a partir de su probabilidad a posteriori (Huelsenbeck et al., 2003).
+Usamos un modelo evolutivo de tipo Mk como con el cálculo de las probablidades margionales pero en este caso muestreamos historias evolutivas en el árbol para nuestro caracter de interés. Y calculamos la probabilidad a posteriori de nuestro caracter en los nodos en función de frecuciencia que muestra de uno un otro estado de caracter en las multiples mapeos.
 
 Empecemos generando un único mapeo con nuestro dataset de las anguilas.
 ```{r}
@@ -221,7 +222,7 @@ plot(fit.marginal$states[,1],pd$ace[1:eel.tree$Nnode],pch=21,cex=1.2,bg="grey",x
 lines(c(0,1),c(0,1),col="blue",lwd=2)
 ```
 
-Finalmente phytools nos otra posibilidad para visualizar los resultados.
+Finalmente phytools nos da otra posibilidad para visualizar los resultados.
 
 ```{r}
 ## create a "densityMap" object
@@ -234,3 +235,25 @@ plot(eel.densityMap,fsize=c(0.3,0.7),lwd=c(3,4))
 
 ```
 
+####################
+ACTIVIDADES
+
+1. Usa los archivos disponibles en este proyecto de R llamados anole.data.csv y Anolis.tre para reconstruir el estado binario grande (lnSVL >4) vs. pequeño (lnSVL >4) medianta probabilidad marginal y mediante mapeo estocástico.
+
+```{r}
+### your code here
+
+```
+
+
+BIBLIOGRAFÍA COMPLEMENTARIA
+
+Collar, D. C., Wainwright, P. C., Alfaro, M. E., Revell, L. J., & Mehta, R. S. (2014). Biting disrupts integration to spur skull evolution in eels. Nature communications, 5(1), 5505.
+
+Felsenstein, J. (2004). Inferring phylogenies. In Inferring phylogenies (pp. 664-664).
+
+Huelsenbeck, J. P., Nielsen, R., & Bollback, J. P. (2003). Stochastic mapping of morphological characters. Systematic biology, 52(2), 131-158.
+
+Losos, J. B. (1999). Uncertainty in the reconstruction of ancestral character states and limitations on the use of phylogenetic comparative methods. Animal Behaviour, 58(6), 1319-1324.
+
+Yang, Z. (2006). Computational molecular evolution. OUP Oxford.
