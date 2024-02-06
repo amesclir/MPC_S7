@@ -8,7 +8,7 @@ editor_options:
 ---
 
 
-RECONSTRUCCION DE ESTADOS ANCESTRALES EN CARACTERES CONTINUOS
+RECONSTRUCCION DE ESTADOS ANCESTRALES EN CARACTERES CUANTITATIVOS CONTINUOS
 
 Cómo ya sabras a estas alturas uno de los modelos más populares para modelizar la evolución de un caracter continuo y luego reconstruir los estados de caracter ancestral en una filogenia es el modelo browniano.
 Para estimar estados ancestrales mediante un modelo browniano lo que haremos es indentificar el conjunto de estados de caracter que tienen la mayor probabilidad bajo el nuestro modelo (Felsenstein, 2004). Este conjunto de estados de caracter ancestral serán nuestras MLE (maximum likelihood estimates o estimas de maxima verosimilitud).
@@ -166,6 +166,7 @@ Y vez de hacer el mapeo a partir del maximum likelihood del modelo ER (como hemo
 ## generate 1,000 stochastic character maps in which
 ## the transition rate is sampled from its posterior
 ## distribution
+##warning, this may take a while!!!!
 mtrees<-make.simmap(eel.tree,feed.mode,model="ER",nsim=1000,Q="mcmc",vQ=0.01,prior=list(use.empirical=TRUE),samplefreq=10)
 mtrees
 
@@ -229,6 +230,7 @@ Finalmente phytools nos da otra posibilidad para visualizar los resultados.
 eel.densityMap<-densityMap(mtrees,states=levels(feed.mode)[2:1],plot=FALSE)
 
 ## update color gradient
+## this make take a while!!!!
 eel.densityMap<-setMap(eel.densityMap,cols[2:1])
 ## plot it, adjusting the plotting parameters
 plot(eel.densityMap,fsize=c(0.3,0.7),lwd=c(3,4))
@@ -242,6 +244,15 @@ ACTIVIDADES
 
 ```{r}
 ### your code here
+
+```
+
+2. Usa este dataset y filogenia para calcular la señal filogenética con la funcińo phylo.d del paquete caper.
+
+```{r}
+### your code here
+library(caper)
+?phylo.d
 
 ```
 
