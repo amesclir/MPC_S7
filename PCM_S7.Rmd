@@ -118,6 +118,7 @@ library(corHMM)
 eel.data<-data.frame(Genus_sp=names(feed.mode),feed.mode=as.numeric(feed.mode)-1)
 head(eel.data,n=10)
 ## estimate marginal ancestral states under a ER model
+##warning this make take a while
 fit.marginal<-corHMM(eel.tree,eel.data,node.states="marginal",rate.cat=1,rate.mat=matrix(c(NA,1,1,NA),2,2))
 fit.marginal
 ```
@@ -160,7 +161,7 @@ legend("bottomleft",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n
 ```
 
 Pero para poder sacar información vamos a hacer por ejemplo 1000 mapeos en vez de 1.
-Y vez de hacer el mapeo a partir del maximum likelihood del modelo ER (como hemos hecho antes) vamos a hacer los mapeos a partir del 95% del intervalo de confianza mediante el método Bayesiano MCMC para muestrear q (tasa de transición de ER) a partir de su distribución a posteriori de porobabilidades.
+Y vez de hacer el mapeo a partir del maximum likelihood del modelo ER (como hemos hecho antes) vamos a hacer los mapeos a partir del 95% del intervalo de confianza mediante el método Bayesiano MCMC para muestrear q (tasa de transición de ER) a partir de su distribución a posteriori de probabilidades.
 
 ```{r}
 ## generate 1,000 stochastic character maps in which
