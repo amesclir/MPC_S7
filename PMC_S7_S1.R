@@ -37,7 +37,7 @@ data.frame(model=c("ER","ARD","small->big","big->small"),logL=c(logLik(fitER),lo
 
 library(corHMM)
 ## create new data frame for corHMM
-anolis.data<-data.frame(species=names(lnSVL),lnSVL=as.numeric(lnSVL)-1)
+anolis.data<-data.frame(species=names(lnSVL),lnSVL=as.numeric(lnSVL))
 head(anolis.data,n=10)
   ## estimate marginal ancestral states under a customed model
 fit.marginal<-corHMM(anolis.tree,anolis.data,node.states="marginal",rate.cat=1,model = "ARD")
