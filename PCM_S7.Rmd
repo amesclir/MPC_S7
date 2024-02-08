@@ -76,6 +76,7 @@ RECONSTRUCCION DE ESTADOS ANCESTRALES EN CARACTERES DISCRETOS MEDIANTE PROBALIDA
 Antes de hacer una reconstrucción de estados de caracater ancestral tendremos que elegir primero el modelo con el que vamos a modelizar la evolución de dichos caracter.
 
 Trabajaremos de nuevo con anguilas. Cargamos los datos.
+
 ```{r}
 ## extract feeding mode as a vector
 feed.mode<-setNames(eel.data[,1],rownames(eel.data))
@@ -149,6 +150,7 @@ Una alternativa cada vez más popular al calculo de las probabilidades marginale
 Usamos un modelo evolutivo de tipo Mk como con el cálculo de las probablidades margionales pero en este caso muestreamos historias evolutivas en el árbol para nuestro caracter de interés. Y calculamos la probabilidad a posteriori de nuestro caracter en los nodos en función de frecuciencia que muestra de uno un otro estado de caracter en las multiples mapeos.
 
 Empecemos generando un único mapeo con nuestro dataset de las anguilas.
+
 ```{r}
 ## generate one stochastic character history
 mtree<-make.simmap(eel.tree,feed.mode,model="ER")
@@ -241,7 +243,7 @@ plot(eel.densityMap,fsize=c(0.3,0.7),lwd=c(3,4))
 ####################
 ACTIVIDADES
 
-1. Usa los archivos disponibles en este proyecto de R llamados anole.data.csv y Anolis.tre para reconstruir el estado binario grande (lnSVL >4) vs. pequeño (lnSVL >4) medianta probabilidad marginal y mediante mapeo estocástico.
+1. Usa los archivos disponibles en este proyecto de R llamados anole.data.csv y Anolis.tre para reconstruir el estado binario grande (lnSVL >1.4) vs. pequeño (lnSVL <1.4) mediante probabilidad marginal y mediante mapeo estocástico.
 
 ```{r}
 ### your code here
