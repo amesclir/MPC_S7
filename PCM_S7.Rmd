@@ -250,7 +250,7 @@ ACTIVIDADES
 
 ```
 
-2. Usa este dataset y filogenia para calcular la señal filogenética con la funcińo phylo.d del paquete caper.
+2. Usa este dataset y filogenia para calcular la señal filogenética con la función phylo.d del paquete caper.
 
 ```{r}
 ### your code here
