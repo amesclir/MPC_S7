@@ -52,7 +52,7 @@ nodelabels(pie=fit.marginal$states,piecol=cols,cex=0.5)
 
 
 ## generate one stochastic character history
-mtree<-make.simmap(anolis.tree,lnSVL,model="ER")
+mtree<-make.simmap(anolis.tree,lnSVL,model="ARD")
 
 ## plot single stochastic map
 plot(mtree,cols,fsize=0.4,ftype="i",lwd=2,offset=0.4,ylim=c(-1,Ntip(anolis.tree)))
