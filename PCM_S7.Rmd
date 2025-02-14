@@ -10,8 +10,19 @@ editor_options:
 
 RECONSTRUCCION DE ESTADOS ANCESTRALES EN CARACTERES CUANTITATIVOS CONTINUOS
 
-Cómo ya sabras a estas alturas uno de los modelos más populares para modelizar la evolución de un caracter continuo y luego reconstruir los estados de caracter ancestral en una filogenia es el modelo browniano.
-Para estimar estados ancestrales mediante un modelo browniano lo que haremos es indentificar el conjunto de estados de caracter que tienen la mayor probabilidad bajo el nuestro modelo (Felsenstein, 2004). Este conjunto de estados de caracter ancestral serán nuestras MLE (maximum likelihood estimates o estimas de maxima verosimilitud).
+El modelo Browniano: una herramienta popular para modelar la evolución de caracteres continuos
+
+El modelo Browniano es una herramienta muy utilizada para entender cómo evolucionan las características que se miden en números (como la altura de una planta o el peso de un animal) a lo largo del tiempo. Además, este modelo nos permite reconstruir cómo eran esas características en el pasado, en los ancestros de las especies que observamos hoy en día.
+
+¿Cómo funciona el modelo Browniano para estimar estados ancestrales?
+
+Imagina que tienes un árbol genealógico de diferentes especies y quieres saber cómo era una característica en un ancestro común de todas ellas. El modelo Browniano te ayuda a encontrar la respuesta.
+
+Lo que hace este modelo es buscar el conjunto de valores para esa característica ancestral que tienen la mayor probabilidad de haber ocurrido, dado lo que observamos en las especies actuales y cómo están relacionadas entre sí. ¡Es como resolver un puzzle evolutivo!
+
+Esos valores que encontramos con mayor probabilidad son nuestras "MLE" (estimaciones de máxima verosimilitud). En otras palabras, son las estimaciones más confiables que podemos hacer sobre cómo era esa característica en el pasado, basándonos en la información disponible.
+
+
 Esto lo podemos hacer con una gran variedad de funciones de paquetes de R como son la función ace de ape o la función fastAnc de phytools. 
 Para esto vamos a usar datos del tamaño corporal de un grupo de anguilas (Collar et al., 2014).
 Carguemos pues los datos.
@@ -42,7 +53,7 @@ fit.lnTL<-fastAnc(eel.tree,lnTL,vars=TRUE,CI=TRUE)
 print(fit.lnTL,printlen=10)
 ```
 
-Vamos la filogenia.
+Veamos la filogenia.
 
 ```{r}
 ## plot eel phylogeny using plotTree
@@ -108,8 +119,22 @@ data.frame(model=c("ER","ARD","bite->suction","suction->bite"),logL=c(logLik(fit
 
 El modelo con el mejor ajuste es ER.
 
-Uno de los métodos más usados para estimar los estados de caracter ancestral en un rasgo discreto es la probabilidad marginal. En este método cálculamos la probabilidad de los posibles estados de caracter nodo a nodo. En cada nodo nos preguntamos que estado tiene el maximum likelihood integrando a traves de todos los posibles combinaciones de estado de caracter en los otros nodos de la filogenia (Yang, 2006).
-En este método computamos las probabilidades de cada posible estado de caracter en cada nodo. La ratio o relación de las probabilidades de la suma de las probabilidades de cada estado de caracter nos da un valor entre 0 y 1 para cada estado que es llamado probabilidad margional escalada.
+Estimación de estados ancestrales en rasgos discretos: la probabilidad marginal
+
+Cuando queremos estudiar cómo han evolucionado características que no se miden con números (como el color de una flor o la presencia de una espina), utilizamos métodos diferentes a los que usamos para características numéricas. Uno de los métodos más comunes es la probabilidad marginal.
+
+¿Cómo funciona la probabilidad marginal?
+
+Imagina que tienes un árbol genealógico de diferentes especies y quieres saber cuál era el color de una flor en un ancestro común de todas ellas. La probabilidad marginal te ayuda a encontrar la respuesta.
+
+Este método funciona "nodo a nodo", es decir, va analizando cada punto del árbol genealógico (nodo) y se pregunta: ¿cuál es el estado más probable para esta característica en este ancestro en particular?
+
+Para responder a esta pregunta, el método considera todas las posibles combinaciones de estados de la característica en los demás nodos del árbol. En cada nodo nos preguntamos que estado tiene el maximum likelihood integrando a traves de todos los posibles combinaciones de estado de caracter en los otros nodos de la filogenia (Yang, 2006). 
+
+¿Qué obtenemos con este método?
+
+Al final, obtenemos un valor entre 0 y 1 para cada posible estado de la característica en cada nodo. Este valor se llama probabilidad marginal escalada. Nos dice qué tan probable es que un ancestro haya tenido un estado particular de la característica, en comparación con otras opciones. 
+
 
 Vamos a hacer una reconstrucción usando la función corHMM de corHMM. 
 
@@ -144,10 +169,29 @@ nodelabels(pie=fit.marginal$states,piecol=cols,cex=0.5)
 Podemos apreciar un alto grado de incertidumbre en la reconstrucción.
 
 
-MAPEO ESTOCÁSTICO
+MAPEO ESTOCÁSTICO: una mirada al pasado evolutivo
 
-Una alternativa cada vez más popular al calculo de las probabilidades marginales es el mapeo estocático. En este caso se usa MCMC para muestrear historias evolutivas de nuestro caracter de interés a partir de su probabilidad a posteriori (Huelsenbeck et al., 2003).
-Usamos un modelo evolutivo de tipo Mk como con el cálculo de las probablidades margionales pero en este caso muestreamos historias evolutivas en el árbol para nuestro caracter de interés. Y calculamos la probabilidad a posteriori de nuestro caracter en los nodos en función de frecuciencia que muestra de uno un otro estado de caracter en las multiples mapeos.
+Además de la probabilidad marginal, el mapeo estocástico es otra forma popular de estudiar la evolución de características.
+
+¿Qué lo hace diferente?
+
+En lugar de calcular probabilidades para cada estado en cada nodo, el mapeo estocástico usa MCMC para generar muchas "historias evolutivas" posibles de nuestro fenotipo de interés (Huelsenbeck et al., 2003).
+
+Imagina que cada historia es un camino que el fenotipo pudo haber tomado en el árbol genealógico. El mapeo estocástico crea muchas de estas historias, cada una con una probabilidad diferente.
+
+¿Cómo funciona?
+
+Modelo: Usamos un modelo evolutivo (como el Mk) para describir cómo el fenotipo pudo haber cambiado. 
+
+Historias: Con MCMC, generamos muchas historias evolutivas, basándonos en el modelo y en lo que vemos en las especies actuales. Pero solo son válidas las historias evolutivas que acaban con cada una de las especies de la filogenia con su estado de caracter actual.
+
+Probabilidad: Para cada nodo, vemos con qué frecuencia aparece cada estado en las historias. Esto nos da la probabilidad de ese estado en el pasado.
+
+En resumen, el mapeo estocástico crea muchas "versiones" del pasado evolutivo y ve cuál es más probable según lo que observamos hoy.
+
+¿Por qué es útil?
+
+El mapeo estocástico nos permite explorar la incertidumbre sobre el pasado. En lugar de una respuesta única, nos da un rango de posibilidades, mostrando lo que no sabemos con certeza.
 
 Empecemos generando un único mapeo con nuestro dataset de las anguilas.
 
@@ -162,8 +206,7 @@ legend("bottomleft",legend=levels(feed.mode),pch=22,pt.cex=1.5,pt.bg=cols,bty="n
 
 ```
 
-Pero para poder sacar información vamos a hacer por ejemplo 1000 mapeos en vez de 1.
-Y vez de hacer el mapeo a partir del maximum likelihood del modelo ER (como hemos hecho antes) vamos a hacer los mapeos a partir del 95% del intervalo de confianza mediante el método Bayesiano MCMC para muestrear q (tasa de transición de ER) a partir de su distribución a posteriori de probabilidades.
+El mapeo estocástico ofrece una visión robusta de la evolución de rasgos al generar múltiples "historias evolutivas" mediante MCMC. A diferencia de otros métodos, no calcula probabilidades puntuales, sino que crea 1000 posibles caminos evolutivos para un rasgo, cada uno con su probabilidad. Usando un modelo evolutivo como el Mk, pero con un enfoque Bayesiano que muestrea la tasa de transición (q) a partir de su distribución a posteriori, se generan estas historias basadas en datos actuales. Luego, se observa la frecuencia de cada estado en las historias para determinar la probabilidad del estado ancestral en cada nodo. Este enfoque, al explorar múltiples escenarios y usar información Bayesiana, proporciona una comprensión más completa y confiable de la evolución de rasgos, reflejando la incertidumbre inherente al reconstruir el pasado.
 
 ```{r}
 ## generate 1,000 stochastic character maps in which
