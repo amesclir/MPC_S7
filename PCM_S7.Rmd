@@ -119,6 +119,8 @@ data.frame(model=c("ER","ARD","bite->suction","suction->bite"),logL=c(logLik(fit
 
 El modelo con el mejor ajuste es ER.
 
+
+
 Estimación de estados ancestrales en rasgos discretos: la probabilidad marginal
 
 Cuando queremos estudiar cómo han evolucionado características que no se miden con números (como el color de una flor o la presencia de una espina), utilizamos métodos diferentes a los que usamos para características numéricas. Uno de los métodos más comunes es la probabilidad marginal.
